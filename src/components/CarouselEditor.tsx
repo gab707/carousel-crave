@@ -3,7 +3,7 @@ import { Stage, Layer, Image as KImage, Rect, Transformer, Line } from "react-ko
 import useImage from "use-image";
 import Konva from "konva";
 import { Undo2, Redo2, Sun, Crop, Trash2, Download, ImagePlus, Check, ArrowUpToLine, ArrowDownToLine } from "lucide-react";
-import logoUrl from "@/assets/carousel-crave-logo.png";
+import logoUrl from "@/assets/logo-707.png";
 
 type ImgItem = {
   id: string;
@@ -536,7 +536,7 @@ export default function CarouselEditor() {
     <div className="min-h-screen text-foreground" onClick={() => { setBrightnessOpen(false); }}>
       <header className="border-b border-border/60 bg-card/30 backdrop-blur-xl px-6 py-3 flex flex-wrap items-center gap-3 sticky top-0 z-40">
         <div className="mr-auto flex items-center gap-3">
-          <img src={logoUrl} alt="Carousel Crave" className="h-10 w-10 object-contain drop-shadow-[0_0_12px_rgba(168,85,247,0.5)]" />
+          <img src={logoUrl} alt="707" className="h-10 w-10 rounded-lg object-contain" />
           <h1 className="text-lg font-semibold tracking-[0.3em] uppercase bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Carousel<span className="text-foreground/50">//</span>Crave
           </h1>
