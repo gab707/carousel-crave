@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Stage, Layer, Image as KImage, Rect, Transformer, Line } from "react-konva";
 import useImage from "use-image";
 import Konva from "konva";
+import JSZip from "jszip";
 import { Undo2, Redo2, Sun, Crop, Trash2, Download, ImagePlus, Check, ArrowUpToLine, ArrowDownToLine } from "lucide-react";
 import logoUrl from "@/assets/logo-707.png";
 
@@ -491,23 +492,41 @@ export default function CarouselEditor() {
     stage.size({ width: totalW, height: panelH });
 
     try {
-      const urls: string[] = [];
+      const files: File[] = [];
       for (let i = 0; i < panels; i++) {
-        urls.push(stage.toDataURL({
+        const dataUrl = stage.toDataURL({
           x: i * panelW, y: 0, width: panelW, height: panelH,
           pixelRatio: 1, mimeType: "image/jpeg", quality: 0.95,
-        }));
+        });
+        const blob = await (await fetch(dataUrl)).blob();
+        files.push(new File([blob], `panel-${i + 1}.jpg`, { type: "image/jpeg" }));
       }
-      for (let i = 0; i < urls.length; i++) {
-        const a = document.createElement("a");
-        a.href = urls[i];
-        a.download = `panel-${i + 1}.jpg`;
-        a.rel = "noopener";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        await new Promise((r) => setTimeout(r, 300));
+
+      // Phones: one share sheet with every panel (Save to Photos / Files).
+      const isTouch = window.matchMedia("(pointer: coarse)").matches;
+      if (isTouch && navigator.canShare?.({ files })) {
+        try {
+          await navigator.share({ files });
+          return;
+        } catch (err) {
+          if (err instanceof DOMException && err.name === "AbortError") return;
+          // any other share failure: fall through to the ZIP download
+        }
       }
+
+      // Desktop (and fallback): a single ZIP, one download prompt.
+      const zip = new JSZip();
+      files.forEach((f) => zip.file(f.name, f));
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "carousel-panels.zip";
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (err) {
       console.error("Export failed:", err);
       alert("Export failed: " + (err instanceof Error ? err.message : String(err)));
