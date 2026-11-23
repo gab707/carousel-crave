@@ -8,9 +8,16 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
 // @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
+// GitHub Pages build: set by the deploy workflow (or GITHUB_ACTIONS on CI).
+// Disables the Cloudflare/Nitro server preset so the output is purely static.
+const basePath = process.env.VITE_BASE_PATH || "/";
+const staticBuild = !!process.env.VITE_BASE_PATH || process.env.GITHUB_ACTIONS === "true";
+
 export default defineConfig({
+  ...(staticBuild ? { nitro: false as const } : {}),
   tanstackStart: {
     server: { entry: "server" },
+    router: { basepath: basePath },
     // Static output for GitHub Pages: prerender the single-page app to HTML.
     pages: [{ path: "/" }],
     prerender: { enabled: true, autoStaticPathsDiscovery: false },
@@ -18,6 +25,6 @@ export default defineConfig({
   vite: {
     // GitHub Pages project sites serve from /<repo-name>/; set VITE_BASE_PATH
     // at build time (the deploy workflow does this automatically).
-    base: process.env.VITE_BASE_PATH || "/",
+    base: basePath,
   },
 });
